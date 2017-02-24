@@ -6,5 +6,9 @@ from board import Board
 b = Board(4)
 print(b.board)
 # flip color to next move
-searchResult = b.searchToEdge([3, 4])
+searchResult = b.searchPossibleStepsToEdge([3, 4])
 print(searchResult)
+
+b.play([3,2])
+b.play([2,2])
+b.play([2,3])

@@ -71,6 +71,9 @@ class Board:
         print('find possible step')
         color = self.color
 
+    def getAllSameColoredPieces(self):
+        return np.argwhere(self.board == self.color)
+
     def play(self, position):
         """play at position"""
         if self.step == self.n**2:

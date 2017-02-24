@@ -14,10 +14,10 @@ class Board:
 
     def __init__(self, n):
         board = np.zeros((2 * n, 2 * n), np.int8)
-        board[n - 1, n - 1] = -1
-        board[n - 1, n] = 1
-        board[n, n - 1] = 1
-        board[n, n] = -1
+        board[n - 1, n - 1] = 1
+        board[n - 1, n] = -1
+        board[n, n - 1] = -1
+        board[n, n] = 1
         self.board = board
         self.sequece = []
         self.color = -1
@@ -30,29 +30,40 @@ class Board:
         results = []
         p = np.array(position)
         direction = np.array(
-            [[-1, 0], [-1, 1], [0, 1], [1, 1], [1, 0], [1, -1], [-1, 0], [-1, -1]])
+            [[-1, 0], [-1, 1], [0, 1], [1, 1], [1, 0], [1, -1], [0, -1], [-1, -1]])
         n = self.n
         for j in range(8):
+            differentColorAppeared = False
+            d = direction[j]
             for i in range(n):
-                diffCount = 0
-                d = direction[j]
                 nextSearchStep = p + (i + 1) * np.array(d)
-                oneMoreStep = nextSearchStep + np.array(d)
-                if nextSearchStep[0] < 0 | nextSearchStep[1] < 0 | nextSearchStep[0] > self.n - 1 | nextSearchStep[1] > self.n - 1:
+                x, y = nextSearchStep
+                # 超过边
+                if x < 0 | y < 0 | x > self.n - 1 | y > self.n - 1:
                     break
-                elif self.board[nextSearchStep[0], nextSearchStep[1]] == 0:
-                    break
-                elif self.board[nextSearchStep[0], nextSearchStep[1]] != self.color:
+                # 空白的格子
+                elif self.board[x, y] == 0:
+                    if i == 0:
+                        break
+                    elif differentColorAppeared == False:
+                        break
+                    else:
+                        results.append(nextSearchStep)
+                        break
+                # 与当前要下的棋子不同色
+                elif self.board[x, y] != self.color:
                     # 如果找到和当前要下的棋子一样的，那么就把当中所有棋子都变成这种颜色
                     # for u in range(i):
                     #    nextChangePosition = p + u * np.array(d)
                     #    self.board[nextChangePosition[0],
                     #               nextChangePosition[1]] = self.color
-                    diffCount = diffCount + 1
-                elif self.board[nextSearchStep[0], nextSearchStep[1]] == self.color & diffCount > 0:
-                    break
-                elif oneMoreStep[0] >= 0 | oneMoreStep[1] >= 0 | oneMoreStep[0] <= self.n - 1 | oneMoreStep[1] <= self.n - 1:
-                    results.append(oneMoreStep)
+                    differentColorAppeared = True
+                    continue
+                elif self.board[x, y] == self.color:
+                    if differentColorAppeared == True:
+                        break
+                    else:
+                        continue
         return results
 
     def findPossibleStep(self):

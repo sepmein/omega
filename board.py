@@ -3,6 +3,7 @@
 class Board
 """
 import numpy as np
+import random
 
 
 class Board:
@@ -147,7 +148,7 @@ class Board:
                 self.flipToEdge(p)
                 self.sequece.append([self.board, p])
                 self.color = -1 * self.color
-                print(self.board)
+                # print(self.board)
             else:
                 print('Error, not possible')
 
@@ -161,13 +162,12 @@ class Board:
         winner = self.judgeWinner()
         print(winner)
         print('end game')
-        self.export()
 
     def count(self):
         blackNumber = (self.board == -1).sum()
         whiteNubmer = (self.board == 1).sum()
         # blankNumber = self.n ** 2 - blackNumber - whiteNubmer
-        print('white %i, black %i',whiteNubmer,blackNumber)
+        print('white and black: ', whiteNubmer, blackNumber)
         return (blackNumber, whiteNubmer)
 
     def judgeWinner(self):
@@ -182,30 +182,62 @@ class Board:
         else:
             return 0
 
-    def export(self):
+    def reset(self):
+        """reset board"""
+        n = self.n / 2
+        board = np.zeros((2 * n, 2 * n), np.int8)
+        board[n - 1, n - 1] = 1
+        board[n - 1, n] = -1
+        board[n, n - 1] = -1
+        board[n, n] = 1
+        self.board = board
+        self.sequece = []
+        self.color = -1
+        self.step = 0
+        self.n = 2 * n
+        self.state = 1
+        self.noMoreStepsCount = 0
+        self.directions = np.array(
+            [[-1, 0], [-1, 1], [0, 1], [1, 1], [1, 0], [1, -1], [0, -1], [-1, -1]])
+
+    def generateAndExportGame(self, times):
+        """
+            generete full played game several times
+            export four things:
+            current board, player color, position to played, final result
+            consider parameters steps, possible steps(均可从board衍生而出)
+        """
+        if self.n % 2 != 0 or self.n <= 6:
+            print('board dimension too small or board dimension error')
+            return
+        export = []
+        for i in range(times):
+            export.append([])
+            u = 0
+            while self.state == 1:
+                possibleSteps = self.findAllPossibleSteps()
+                if possibleSteps.shape[0] == 0:
+                    self.play(possibleSteps)
+                else:
+                    export[i].append([])
+                    randomIndex = int(random.random() * possibleSteps.shape[0])
+                    position = possibleSteps[randomIndex]
+                    export[i][u].append(np.copy(self.board))
+                    export[i][u].append(self.color)
+                    export[i][u].append(position)
+                    self.play(position)
+                    u = u + 1
+            winner = self.judgeWinner()
+            for j in range(len(export[i])):
+                export[i][j].append(winner)
+            self.reset()
+        self.export(export)
+        return export
+
+    def export(self, e):
         """export board"""
-        print('export')
+        np.save('result', e)
 
     def printBoard(self):
         """print out board"""
         print(self.board)
-    
-    def generateAndExportGame(self, times):
-        """generet full played game several times"""
-        if self.n % 2 != 0 or self.n <= 6:
-            print('board dimension too small or board dimension error')
-            return
-        if type(times) != int or times <= 0:
-            print('Argument times should be int and > 0')
-            return
-        b = self.board
-        for i in range(times):
-            while b.state == 1:
-                possibleSteps = b.findAllPossibleSteps()
-                if possibleSteps.shape[0] == 0:
-                    b.play(possibleSteps)
-                else:
-                    randomIndex = int(random.random() * possibleSteps.shape[0])
-                    b.play(possibleSteps[randomIndex])
-
-        

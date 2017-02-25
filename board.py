@@ -159,8 +159,8 @@ class Board:
     def endGame(self):
         """end game"""
         self.state = 0
-        winner = self.judgeWinner()
-        print(winner)
+        # winner = self.judgeWinner()
+        # print(winner)
         print('end game')
 
     def count(self):

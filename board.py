@@ -161,13 +161,13 @@ class Board:
         self.state = 0
         # winner = self.judgeWinner()
         # print(winner)
-        print('end game')
+        # print('end game')
 
     def count(self):
         blackNumber = (self.board == -1).sum()
         whiteNubmer = (self.board == 1).sum()
         # blankNumber = self.n ** 2 - blackNumber - whiteNubmer
-        print('white and black: ', whiteNubmer, blackNumber)
+        print('1/', whiteNubmer, '-1/', blackNumber)
         return (blackNumber, whiteNubmer)
 
     def judgeWinner(self):
@@ -200,7 +200,7 @@ class Board:
         self.directions = np.array(
             [[-1, 0], [-1, 1], [0, 1], [1, 1], [1, 0], [1, -1], [0, -1], [-1, -1]])
 
-    def generateAndExportGame(self, times):
+    def generateAndExportGame(self, times, fname):
         """
             generete full played game several times
             export four things:
@@ -228,13 +228,14 @@ class Board:
                     self.play(position)
                     u = u + 1
             winner = self.judgeWinner()
+            print('w/', winner)
             for j in range(len(export[i])):
                 export[i][j].append(winner)
             self.reset()
-        self.export(export)
+        self.export(export, fname)
         return export
 
-    def export(self, e):
+    def export(self, e, fname):
         """export board"""
         np.save('result', e)
 

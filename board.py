@@ -24,14 +24,16 @@ class Board:
         self.color = -1
         self.step = 0
         self.n = 2 * n
-        self.state = 0
+        self.state = 1
         self.noMoreStepsCount = 0
         self.directions = np.array(
             [[-1, 0], [-1, 1], [0, 1], [1, 1], [1, 0], [1, -1], [0, -1], [-1, -1]])
 
     def searchPossibleStepsToEdge(self, position):
         """search in 8 directions
-        batch search algorithm"""
+        batch search algorithm
+        position is python list
+        """
         results = []
         p = np.array(position)
         n = self.n
@@ -42,7 +44,7 @@ class Board:
                 nextSearchStep = p + (i + 1) * np.array(d)
                 x, y = nextSearchStep
                 # 超过边
-                if x < 0 | y < 0 | x > self.n - 1 | y > self.n - 1:
+                if x < 0 or y < 0 or (x > self.n - 1) or (y > self.n - 1):
                     break
                 # 空白的格子
                 elif self.board[x, y] == 0:
@@ -81,18 +83,13 @@ class Board:
                 nextSearchStep = p + (i + 1) * np.array(d)
                 x, y = nextSearchStep
                 # 超过边
-                if x < 0 | y < 0 | x > self.n - 1 | y > self.n - 1:
+                if x < 0 or y < 0 or (x > self.n - 1) or (y > self.n - 1):
                     break
                 # 空白的格子
                 elif self.board[x, y] == 0:
                     break
                 # 与当前要下的棋子不同色
                 elif self.board[x, y] != self.color:
-                    # 如果找到和当前要下的棋子一样的，那么就把当中所有棋子都变成这种颜色
-                    # for u in range(i):
-                    #    nextChangePosition = p + u * np.array(d)
-                    #    self.board[nextChangePosition[0],
-                    #               nextChangePosition[1]] = self.color
                     differentColorAppeared = True
                     continue
                 # 与当前棋子相同的颜色
@@ -110,11 +107,16 @@ class Board:
     def findAllPossibleSteps(self):
         """find the possible step of next step"""
         pieces = self.getAllSameColoredPieces()
-        length = pieces.shape[1]
+        length = pieces.shape[0]
         result = []
         for i in range(length):
             result.extend(self.searchPossibleStepsToEdge(pieces[i]))
-        return np.array(result)
+        result = np.array(result)
+        # return unique rows
+        if result.shape[0] == 0:
+            return np.array([])
+        else:
+            return np.vstack({tuple(row) for row in result})
 
     def getAllSameColoredPieces(self):
         """get all same colored pieces"""
@@ -124,7 +126,10 @@ class Board:
         """play at position"""
         allPossibleSteps = self.findAllPossibleSteps()
         length = allPossibleSteps.shape[0]
-        p = np.array(position)
+        if type(position) == np.ndarray:
+            p = position.tolist()
+        else:
+            p = position
         # 没有可下的棋
         if length == 0:
             self.noMoreStepsCount = self.noMoreStepsCount + 1
@@ -137,7 +142,7 @@ class Board:
                 self.flipSide()
         else:
             # 要下的位置是否在可下的位置
-            if p in allPossibleSteps:
+            if p in allPossibleSteps.tolist():
                 self.board[p[0], p[1]] = self.color
                 self.flipToEdge(p)
                 self.sequece.append([self.board, p])
@@ -152,14 +157,18 @@ class Board:
 
     def endGame(self):
         """end game"""
+        self.state = 0
+        winner = self.judgeWinner()
+        print(winner)
         print('end game')
         self.export()
 
     def count(self):
         blackNumber = (self.board == -1).sum()
         whiteNubmer = (self.board == 1).sum()
-        blankNumber = n ** 2 - blackNumber - whiteNubmer
-        return (blackNumber, whiteNubmer, blackNumber)
+        # blankNumber = self.n ** 2 - blackNumber - whiteNubmer
+        print('white %i, black %i',whiteNubmer,blackNumber)
+        return (blackNumber, whiteNubmer)
 
     def judgeWinner(self):
         """judge winner
@@ -180,3 +189,23 @@ class Board:
     def printBoard(self):
         """print out board"""
         print(self.board)
+    
+    def generateAndExportGame(self, times):
+        """generet full played game several times"""
+        if self.n % 2 != 0 or self.n <= 6:
+            print('board dimension too small or board dimension error')
+            return
+        if type(times) != int or times <= 0:
+            print('Argument times should be int and > 0')
+            return
+        b = self.board
+        for i in range(times):
+            while b.state == 1:
+                possibleSteps = b.findAllPossibleSteps()
+                if possibleSteps.shape[0] == 0:
+                    b.play(possibleSteps)
+                else:
+                    randomIndex = int(random.random() * possibleSteps.shape[0])
+                    b.play(possibleSteps[randomIndex])
+
+        

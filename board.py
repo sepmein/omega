@@ -246,8 +246,8 @@ class Board:
         print(self.board)
 
     def loadData(self, fname):
-	data = np.load(fname)
-	return data
+        data = np.load(fname)
+        return data
 
     def formatData(self, data):
         d = 0

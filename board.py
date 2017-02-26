@@ -167,7 +167,7 @@ class Board:
         blackNumber = (self.board == -1).sum()
         whiteNubmer = (self.board == 1).sum()
         # blankNumber = self.n ** 2 - blackNumber - whiteNubmer
-        print('1/', whiteNubmer, '-1/', blackNumber)
+        # print('1/', whiteNubmer, '-1/', blackNumber)
         return (blackNumber, whiteNubmer)
 
     def judgeWinner(self):
@@ -212,6 +212,8 @@ class Board:
             return
         export = []
         for i in range(times):
+            if i % 1000 == 0:
+                print('Cycle:', i)
             export.append([])
             u = 0
             while self.state == 1:
@@ -228,7 +230,7 @@ class Board:
                     self.play(position)
                     u = u + 1
             winner = self.judgeWinner()
-            print('w/', winner)
+            # print('w/', winner)
             for j in range(len(export[i])):
                 export[i][j].append(winner)
             self.reset()
@@ -237,7 +239,7 @@ class Board:
 
     def export(self, e, fname):
         """export board"""
-        np.save('result', e)
+        np.save(fname, e)
 
     def printBoard(self):
         """print out board"""

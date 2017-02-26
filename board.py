@@ -244,3 +244,26 @@ class Board:
     def printBoard(self):
         """print out board"""
         print(self.board)
+
+    def loadData(self, fname):
+	data = np.load(fname)
+	return data
+
+    def formatData(self, data):
+        d = 0
+        u = False
+        for i in range(data.shape[0]):
+            for j in range(len(data[i])):
+                # the board
+                # reshape to
+                board = data[i][j][0].reshape(64)
+                currentColor = [data[i][j][1]]
+                position = data[i][j][2]
+                result = [data[i][j][3]]
+                row = np.concatenate((board, currentColor, position, result))
+                if u == False:
+                    d = row
+                    u = True
+                else:
+                    d = np.vstack((d, row))
+        return d

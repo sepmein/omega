@@ -23,7 +23,7 @@ model.add(Dense(output_dim=100))
 model.add(Activation('relu'))
 # model.add(Dense(output_dim=256))
 # model.add(Activation('relu'))
-model.add(Dense(output_dim=3))
+model.add(Dense(output_dim=2))
 model.add(Activation('softmax'))
 
 model.compile(loss='categorical_crossentropy',
@@ -31,11 +31,11 @@ model.compile(loss='categorical_crossentropy',
 
 X_train = TRAINING_SET[:, :67]
 Y_train_int = TRAINING_SET[:, 67:]
-Y_train = to_categorical(Y_train_int)
+Y_train = to_categorical(Y_train_int, 2)
 
 X_test = TEST_SET[:, :67]
 Y_test_int = TEST_SET[:, 67:]
-Y_test = to_categorical(Y_test_int)
+Y_test = to_categorical(Y_test_int, 2)
 model.fit(X_train, Y_train, nb_epoch=5, batch_size=32)
 
 loss_and_metrics = model.evaluate(X_test, Y_test, batch_size=32)

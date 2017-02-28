@@ -237,6 +237,32 @@ class Board:
         self.export(export, fname)
         return export
 
+    def generateGameUsingModelOnce(self, model):
+        if self.n % 2 != 0 or self.n <= 6:
+            print('board dimension too small or board dimension error')
+            return
+        export = []
+        u = 0
+        while self.state == 1:
+            possibleSteps = self.findAllPossibleSteps()
+            if possibleSteps.shape[0] == 0:
+                self.play(possibleSteps)
+            else:
+                board = np.copy(self.board).reshape(64)
+                color = [self.color]
+                nextStep = self.pickBestMove(model)
+                export.append(np.concatenate((board, color, nextStep)))
+                self.play(nextStep)
+                u = u + 1
+        winner = self.judgeWinner()
+        # print('w/', winner)
+        for j in range(len(export)):
+            export[j] = np.concatenate((export[j], [winner]))
+        self.reset()
+        export = np.array(export)
+        (x, y) = (export[:, :67], export[:, 67:])
+        return (x, y)
+
     def export(self, e, fname):
         """export board"""
         np.save(fname, e)
@@ -267,3 +293,22 @@ class Board:
                 else:
                     d = np.vstack((d, row))
         return d
+
+    def predictWinningProbabilityForNextStep(self, model):
+        allPossibleSteps = self.findAllPossibleSteps()
+        data = []
+        for i in range(allPossibleSteps.shape[0]):
+            boardReshape = self.board.reshape(64)
+            currentColor = [self.color]
+            step = allPossibleSteps[i]
+            data.append(np.concatenate((boardReshape, currentColor, step)))
+        datanp = np.vstack(step for step in data)
+        predictions = model.predict(datanp, batch_size=1, verbose=0)
+        return (allPossibleSteps, predictions)
+
+    def pickBestMove(self, model):
+        (steps, predictions) = self.predictWinningProbabilityForNextStep(model)
+        if self.color == -1:
+            return steps[predictions[:, 2:].argmax()]
+        else:
+            return steps[predictions[:, 1:2].argmax()]

@@ -250,7 +250,7 @@ class Board:
             else:
                 board = np.copy(self.board).reshape(64)
                 color = [self.color]
-                nextStep = self.pickBestMove(model, 0.3)
+                nextStep = self.pickBestMoveWithRandomness(model, 0.5)
                 export.append(np.concatenate((board, color, nextStep)))
                 self.play(nextStep)
                 u = u + 1

@@ -250,7 +250,7 @@ class Board:
             else:
                 board = np.copy(self.board).reshape(64)
                 color = [self.color]
-                nextStep = self.pickBestMove(model)
+                nextStep = self.pickBestMove(model, 0.3)
                 export.append(np.concatenate((board, color, nextStep)))
                 self.play(nextStep)
                 u = u + 1
@@ -260,8 +260,7 @@ class Board:
             export[j] = np.concatenate((export[j], [winner]))
         self.reset()
         export = np.array(export)
-        (x, y) = (export[:, :67], export[:, 67:])
-        return (x, y)
+        return export
 
     def export(self, e, fname):
         """export board"""
@@ -312,3 +311,23 @@ class Board:
             return steps[predictions[:, 2:].argmax()]
         else:
             return steps[predictions[:, 1:2].argmax()]
+
+    def pickBestMoveWithRandomness(self, model, randomRate):
+        (steps, predictions) = self.predictWinningProbabilityForNextStep(model)
+
+        def softmax(w, t=1.0):
+            e = np.exp(np.array(w) / t)
+            dist = e / np.sum(e)
+            return dist
+
+        if self.color == -1:
+            (d1, d2) = predictions[:, 2:].shape
+            softmaxWithRandomness = softmax(predictions[:, 2:]) * \
+                (randomRate * np.random.rand(d1, d2))
+            return steps[softmaxWithRandomness.argmax()]
+
+        else:
+            (d1, d2) = predictions[:, 1:2].shape
+            softmaxWithRandomness = softmax(predictions[:, 1:2]) * \
+                (randomRate * np.random.rand(d1, d2))
+            return steps[softmaxWithRandomness.argmax()]

@@ -21,28 +21,26 @@ Y_test_int = TEST_SET[:, 67:]
 Y_test = to_categorical(Y_test_int)
 model = load_model('dnn_c2_v1.h5')
 b = Board(4)
+print('Self Played Neural Network, Training Started')
+data = []
+for j in range(2):
+    print('Save Batch: ', j + 1)
+    for i in range(2):
+        print('Playing Batch: ', i + 1 * j + 1)
+        export = b.generateGameUsingModelOnce(model)
+        data.append(export)
+        (x, y) = (export[:, :67], export[:, 67:])
+        y_catgorical = np.zeros((y.shape[0], 3))
+        for i in y:
+            if y[i] == 0:
+                y_catgorical[i] = [1., 0, 0]
+            elif y[i] == 1:
+                y_catgorical[i] = [0, 1., 0]
+            elif y[i] == -1:
+                y_catgorical[i] = [0, 0, 1.]
+        model.train_on_batch(x, y_catgorical)
 
-(x, y) = b.generateGameUsingModelOnce(model)
-y_catgorical = np.zeros((y.shape[0], 3))
-for i in y:
-    if y[i] == 0:
-        y_catgorical[i] = [1., 0, 0]
-    elif y[i] == 1:
-        y_catgorical[i] = [0, 1., 0]
-    elif y[i] == -1:
-        y_catgorical[i] = [0, 0, 1.]
-model.train_on_batch(x, y_catgorical)
-loss_and_metrics = model.evaluate(X_test, Y_test, batch_size=32)
-print(loss_and_metrics)
-(x1, y1) = b.generateGameUsingModelOnce(model)
-y1_catgorical = np.zeros((y1.shape[0], 3))
-for i in y1:
-    if y1[i] == 0:
-        y1_catgorical[i] = [1., 0, 0]
-    elif y1[i] == 1:
-        y1_catgorical[i] = [0, 1., 0]
-    elif y1[i] == -1:
-        y1_catgorical[i] = [0, 0, 1.]
-model.train_on_batch(x, y1_catgorical)
-loss_and_metrics = model.evaluate(X_test, Y_test, batch_size=32)
-print(loss_and_metrics)
+    model.save('self_played_100_batch1.h5')
+
+toSave = np.vstack(row for row in data)
+np.save('self_played', toSave)

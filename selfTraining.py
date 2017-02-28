@@ -26,8 +26,8 @@ for j in range(1000):
     data = []
     print('Model Save Batch: ', j + 1)
     for i in range(1000):
-        if (i + j + 2) % 100 == 0
-            print('Self Playing Batch: ', i + 1 + j + 1)
+        if ((i + 1) * (j + 1)) % 100 == 0:
+            print('Self Playing Batch: ', (i + 1) * (j + 1))
         export = b.generateGameUsingModelOnce(model)
         data.append(export)
         (x, y) = (export[:, :67], export[:, 67:])

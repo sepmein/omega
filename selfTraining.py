@@ -3,9 +3,9 @@ from keras.models import load_model
 import numpy as np
 from keras.utils.np_utils import to_categorical
 
-data = []
-for i in range(200):
-    data.append(np.load('formatted' + str(i) + '.npy'))
+# data = []
+# for i in range(200):
+#     data.append(np.load('formatted' + str(i) + '.npy'))
 # DATASET = np.vstack(stack for stack in data)
 # DATASET[:, 67][DATASET[:, 67] == 0] = 2
 # training_ratio = 0.9
@@ -19,15 +19,15 @@ for i in range(200):
 # X_test = TEST_SET[:, :67]
 # Y_test_int = TEST_SET[:, 67:]
 # Y_test = to_categorical(Y_test_int)
-model = load_model('dnn_c2_v1.h5')
+model = load_model('./model/self_played_1000_batch[1].h5')
 b = Board(4)
 print('Self Played Neural Network, Training Started')
-for j in range(1000):
+for j in range(10):
     data = []
     print('Model Save Batch: ', j + 1)
-    for i in range(1000):
-        if (i + j + 2) % 100 == 0
-            print('Self Playing Batch: ', i + 1 + j + 1)
+    for i in range(10):
+        if ((i + 1) * (j + 1)) % 100 == 0:
+            print('Self Playing Batch: ', (i + 1) * (j + 1))
         export = b.generateGameUsingModelOnce(model)
         data.append(export)
         (x, y) = (export[:, :67], export[:, 67:])
@@ -41,6 +41,6 @@ for j in range(1000):
                 y_catgorical[i] = [0, 0, 1.]
         model.train_on_batch(x, y_catgorical)
 
-    model.save('self_played_1000_batch' + str(i) + '.h5')
+    model.save('./model/self_played_1000_batch_test' + str(j) + '.h5')
     toSave = np.vstack(row for row in data)
-    np.save('self_played_1000_batch' + str(i), toSave)
+    np.save('self_played_1000_batch_test' + str(j), toSave)

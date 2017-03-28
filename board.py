@@ -165,12 +165,12 @@ class Board:
         # else:
         #     # never calculated before
         self.possibleSteps = self.findAllPossibleSteps(color=self.color)
-        print('\nBefore played')
-        print('Current possible steps:')
-        print self.possibleSteps
-        print('Position to be played: ', position)
-        print('Color to be played: ', self.color)
-        print('==================')
+        # print('\nBefore played')
+        # print('Current possible steps:')
+        # print self.possibleSteps
+        # print('Position to be played: ', position)
+        # print('Color to be played: ', self.color)
+        # print('==================')
         # length = allPossibleSteps.shape[0]
         if position is None:
             self.flipSide()
@@ -185,8 +185,8 @@ class Board:
             self.flipToEdge(p)
             # update possible steps
             # self.sequece.append([self.board, p])
-            print('\n BOARD:')
-            self.printBoard()
+            # print('\n BOARD:')
+            # self.printBoard()
             winner, ended = self.judge_terminal()
             if ended:
                 self.endGame()
@@ -204,9 +204,9 @@ class Board:
 
     def endGame(self):
         """end game"""
-        print('\n')
-        print('++++++++++++++GAME ENDED+++++++++++++++')
-        print('\n')
+        # print('\n')
+        # print('++++++++++++++GAME ENDED+++++++++++++++')
+        # print('\n')
         self.ended = 0
 
     def count(self, state=None):
@@ -420,12 +420,12 @@ class Board:
         actions = self.possibleSteps
         next_states = self.get_next_states()
         rewards = self.get_reward(next_states)
-        print '=================='
-        print 'apply policy called'
-        print('actions', actions)
+        # print '=================='
+        # print 'apply policy called'
+        # print('actions', actions)
         action, optimal_value, move = pai(
             actions, next_states, rewards, method)
-        print('action: ', action)
+        # print('action: ', action)
         return action, optimal_value, move
 
     def judge_terminal(self, state=None):

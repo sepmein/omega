@@ -15,9 +15,9 @@ for i in range(steps):
     while omega.ended:
         actions = omega.possibleSteps
         winner, ended = omega.judge_terminal()
-        print '\n train huhihutu called'
-        print ('actions:', actions)
-        print('winner: ',winner,' ended: ',ended)
+        # print '\n train huhihutu called'
+        # print ('actions:', actions)
+        # print('winner: ',winner,' ended: ',ended)
         if actions.shape[0] == 0 and ended == False:
             omega.play()
             continue

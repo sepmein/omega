@@ -26,6 +26,7 @@ for i in range(steps):
                 (action, value, move) = omega.apply_policy(policy.pai, 'max')
             else:
                 (action, value, move) = omega.apply_policy(policy.pai, 'min')
-            db.store_state(omega.board, value)
+            if value != 0.0:
+                db.store_state(omega.board, value)
             omega.play(action)
     omega.reset()

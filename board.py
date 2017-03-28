@@ -29,59 +29,9 @@ class Board:
         self.n = 2 * n
         self.ended = 1
         self.noMoreStepsCount = 0
-        self.possibleSteps = np.array([[2,3],[3,2],[5,4],[4,5]])
+        self.possibleSteps = np.array([[2, 3], [3, 2], [5, 4], [4, 5]])
         self.directions = np.array(
             [[-1, 0], [-1, 1], [0, 1], [1, 1], [1, 0], [1, -1], [0, -1], [-1, -1]])
-
-    def searchPossibleStepsToEdge(self, position, state=None,  color=None):
-        """search in 8 directions
-        batch search algorithm
-        position is python list
-        """
-        if color:
-            c = color
-        else:
-            c = self.color
-        if type(state) == np.ndarray:
-            b = state
-        else:
-            b = self.board
-        results = []
-        p = np.array(position, np.int8)
-        n = self.n
-        for j in range(n):
-            differentColorAppeared = False
-            d = self.directions[j]
-            for i in range(n):
-                nextSearchStep = p + (i + 1) * np.array(d, np.int8)
-                x, y = nextSearchStep
-                # 超过边
-                if x < 0 or y < 0 or (x > self.n - 1) or (y > self.n - 1):
-                    break
-                # 空白的格子
-                elif b[x, y] == 0:
-                    if i == 0:
-                        break
-                    elif differentColorAppeared == False:
-                        break
-                    else:
-                        results.append(nextSearchStep)
-                        break
-                # 与当前要下的棋子不同色
-                elif b[x, y] != c:
-                    # 如果找到和当前要下的棋子一样的，那么就把当中所有棋子都变成这种颜色
-                    # for u in range(i):
-                    #    nextChangePosition = p + u * np.array(d)
-                    #    b[nextChangePosition[0],
-                    #               nextChangePosition[1]] = c
-                    differentColorAppeared = True
-                    continue
-                elif b[x, y] == c:
-                    if differentColorAppeared == True:
-                        break
-                    else:
-                        continue
-        return results
 
     def flipToEdge(self, position, state=None):
         """
@@ -131,7 +81,7 @@ class Board:
 
     def getAllSameColoredPieces(self, state=None, color=None):
         """get all same colored pieces"""
-        if isinstance(state, np.ndarray):
+        if type(state) == np.ndarray:
             board = state
         else:
             board = self.board
@@ -147,20 +97,74 @@ class Board:
         # else:
         #     s = self.board
         pieces = self.getAllSameColoredPieces(state, color)
-        length = pieces.shape[0]
-        result = []
-        for piece in pieces:
-            result.extend(self.searchPossibleStepsToEdge(piece, state, color))
-        result = np.array(result)
+        results = self.searchPossibleStepsToEdge(pieces, state, color)
         # return unique rows
-        if result.shape[0] == 0:
-            return np.array([])
+        if results.shape[0] == 0:
+            return results
         else:
-            return np.vstack({tuple(row) for row in result})
+            return np.vstack({tuple(row) for row in results})
+
+    def searchPossibleStepsToEdge(self, positions, state=None,  color=None):
+        """
+            search in 8 directions
+            batch search algorithm
+            positions is python list
+        """
+        if color:
+            c = color
+        else:
+            c = self.color
+        if type(state) == np.ndarray:
+            b = state
+        else:
+            b = self.board
+        n = self.n
+        searched = np.empty((0, 3), np.int8)
+        result = []
+        for position in positions:
+            p = np.array(position, np.int8)
+            for j in range(n):
+                differentColorAppeared = False
+                d = self.directions[j]
+                for i in range(n):
+                    nextSearchStep = p + (i + 1) * np.array(d, np.int8)
+                    x, y = nextSearchStep
+                    # if too many steps
+                    # start reduce function
+                    if position.shape[0] >= 5:
+                        if np.any(np.all(searched == [x, y, j], axis=1)):
+                            # searched before, don't search any more
+                            break
+                        else:
+                            # never searched before, push result to searched array
+                            searched = np.append(searched, [[x, y, j]], axis=0)
+                    # 超过边
+                    if x < 0 or y < 0 or (x > self.n - 1) or (y > self.n - 1):
+                        break
+                    # 空白的格子
+                    elif b[x, y] == 0:
+                        if i == 0:
+                            break
+                        elif differentColorAppeared == False:
+                            break
+                        else:
+                            result.append(nextSearchStep)
+                            break
+                    # 与当前要下的棋子不同色
+                    elif b[x, y] != c:
+                        # 如果找到和当前要下的棋子一样的，那么就把当中所有棋子都变成这种颜色
+                        differentColorAppeared = True
+                        continue
+                    elif b[x, y] == c:
+                        if differentColorAppeared == True:
+                            break
+                        else:
+                            continue
+        return np.array(result)
 
     def play(self, position=None):
         """play at position"""
-        # if isinstance(self.possibleSteps, np.ndarray) == True:
+        # if (self.possibleSteps, np.ndarray) == True:
         #     allPossibleSteps = self.possibleSteps
         # else:
         #     # never calculated before
@@ -176,7 +180,7 @@ class Board:
             self.flipSide()
             self.possibleSteps = self.findAllPossibleSteps(color=self.color)
             return
-        if isinstance(position, np.ndarray):
+        if type(position) == np.ndarray:
             p = position.tolist()
         else:
             p = position
@@ -192,7 +196,8 @@ class Board:
                 self.endGame()
             else:
                 self.flipSide()
-                self.possibleSteps = self.findAllPossibleSteps(color=self.color)
+                self.possibleSteps = self.findAllPossibleSteps(
+                    color=self.color)
                 # reset no_more_steps_count to 0 if one has played a step
                 # self.noMoreStepsCount = 0
         else:
@@ -433,7 +438,7 @@ class Board:
         # if no more step for the next color
         # and no more step for the next next color
         # then the next move is final move
-        if isinstance(state, np.ndarray):
+        if type(state) == np.ndarray:
             next_state = state
             # next move
             next_color = self.color * -1
@@ -456,7 +461,8 @@ class Board:
         else:
             next_state = self.board
             next_color = self.color
-            next_possible_steps = self.findAllPossibleSteps(next_state, next_color)
+            next_possible_steps = self.findAllPossibleSteps(
+                next_state, next_color)
             if next_possible_steps.shape[0] != 0:
                 # if next possible steps count > 0
                 # game not ended

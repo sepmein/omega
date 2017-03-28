@@ -7,7 +7,7 @@ db = DB(db_name='omega', top_exceed=1000000)
 db.load_data()
 policy = Policy(gamma=0.9, tao=0.1, db=db,
                 default_value=0)
-steps = 100000
+steps = 10000000
 for i in range(steps):
     print i
     if (i+1) % 100 == 0:

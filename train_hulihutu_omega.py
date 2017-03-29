@@ -14,7 +14,10 @@ for i in range(steps):
         db.bulk_save()
     while omega.ended:
         actions = omega.possibleSteps
-        winner, ended = omega.judge_terminal()
+        if omega.step < 52:
+            ended = False
+        else:
+            winner, ended = omega.judge_terminal()
         # print '\n train huhihutu called'
         # print ('actions:', actions)
         # print('winner: ',winner,' ended: ',ended)

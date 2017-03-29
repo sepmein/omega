@@ -136,7 +136,8 @@ class Board:
                             # searched before, don't search any more
                             break
                         else:
-                            # never searched before, push result to searched array
+                            # never searched before, push result to searched
+                            # array
                             searched = np.append(searched, [[x, y, j]], axis=0)
                     # 超过边
                     if x < 0 or y < 0 or (x > self.n - 1) or (y > self.n - 1):
@@ -187,11 +188,15 @@ class Board:
         if p in self.possibleSteps.tolist():
             self.board[p[0], p[1]] = self.color
             self.flipToEdge(p)
+            self.step = self.step + 1
             # update possible steps
             # self.sequece.append([self.board, p])
             # print('\n BOARD:')
             # self.printBoard()
-            winner, ended = self.judge_terminal()
+            if self.step < 52:
+                ended = False
+            else:
+                winner, ended = self.judge_terminal()
             if ended:
                 self.endGame()
             else:
@@ -402,13 +407,16 @@ class Board:
             else return reward 0
         """
         r = []
-        for state in next_states:
-            winner, ended = self.judge_terminal(state)
-            if ended:
-                r.append(winner)
-            else:
-                r.append(0)
-        return np.array(r)
+        if self.step <= 50:
+            return np.zeros(next_states.shape[0], np.int8)
+        else:
+            for state in next_states:
+                winner, ended = self.judge_terminal(state)
+                if ended:
+                    r.append(winner)
+                else:
+                    r.append(0)
+            return np.array(r)
 
     def generate_and_store_game_by_policy(self, policy):
         """generate a game with policy"""

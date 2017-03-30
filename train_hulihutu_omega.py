@@ -14,7 +14,7 @@ for i in range(steps):
         db.bulk_save()
     while omega.ended:
         actions = omega.possibleSteps
-        if omega.step < 52:
+        if omega.step < 48:
             ended = False
         else:
             winner, ended = omega.judge_terminal()
@@ -29,7 +29,7 @@ for i in range(steps):
                 (action, value, move) = omega.apply_policy(policy.pai, 'max')
             else:
                 (action, value, move) = omega.apply_policy(policy.pai, 'min')
-            if value != 0.0:
-                db.store_state(omega.board, value)
+            if value != 0.0 and omega.step < 58:
+                db.store_state(omega.board, value, default_value = 0)
             omega.play(action)
     omega.reset()

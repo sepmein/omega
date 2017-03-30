@@ -193,7 +193,7 @@ class Board:
             # self.sequece.append([self.board, p])
             # print('\n BOARD:')
             # self.printBoard()
-            if self.step < 52:
+            if self.step < 48:
                 ended = False
             else:
                 winner, ended = self.judge_terminal()
@@ -407,7 +407,7 @@ class Board:
             else return reward 0
         """
         r = []
-        if self.step <= 50:
+        if self.step <= 56:
             return np.zeros(next_states.shape[0], np.int8)
         else:
             for state in next_states:

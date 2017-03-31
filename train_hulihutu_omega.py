@@ -33,7 +33,7 @@ def train():
                     (action, value, move) = omega.apply_policy(policy.pai, 'max')
                 else:
                     (action, value, move) = omega.apply_policy(policy.pai, 'min')
-                if value != 0.0 and omega.step < 58:
+                if value != 0.0 and omega.step > 58:
                     db.store_state(omega.board, value, default_value = 0)
                 omega.play(action)
         omega.reset()

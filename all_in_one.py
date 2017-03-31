@@ -6,8 +6,6 @@ import numpy as np
 import random
 from numba import autojit, int8
 import numba
-from search_possible_steps_to_edge import searchPossibleStepsToEdge
-
 
 class Board:
     """omega board
@@ -19,9 +17,8 @@ class Board:
             reward for white win is -1
             reward for draw is 0
     """
-
     def __init__(self, n=4):
-        self.board = np.zeros((2 * n, 2 * n), dtype=np.int8)
+        self.board = np.zeros((2 * n, 2 * n), dtype = np.int8)
         self.board[n - 1, n - 1] = 1
         self.board[n - 1, n] = -1
         self.board[n, n - 1] = -1
@@ -98,75 +95,73 @@ class Board:
         #     s = state
         # else:
         #     s = self.board
-        if state is None:
-            state = self.board
         pieces = self.getAllSameColoredPieces(state, color)
-        results = searchPossibleStepsToEdge(state, pieces, color)
+        results = self.searchPossibleStepsToEdge(pieces, state, color)
         # return unique rows
         if results.shape[0] == 0:
             return results
         else:
             return np.vstack({tuple(row) for row in results})
 
-    # def searchPossibleStepsToEdge(self, positions, state=None,  color=None):
-    #     """
-    #         search in 8 directions
-    #         batch search algorithm
-    #         positions is python list
-    #         TODO: impact heavily on performance
-    #     """
-    #     if color:
-    #         c = color
-    #     else:
-    #         c = self.color
-    #     if type(state) == np.ndarray:
-    #         b = state
-    #     else:
-    #         b = self.board
-    #     n = self.n
-    #     searched = np.empty((0, 3), np.int8)
-    #     result = []
-    #     for position in positions:
-    #         p = np.array(position, np.int8)
-    #         for j in range(n):
-    #             differentColorAppeared = False
-    #             d = self.directions[j]
-    #             for i in range(n):
-    #                 nextSearchStep = p + (i + 1) * np.array(d, np.int8)
-    #                 x, y = nextSearchStep
-    #                 # if too many steps
-    #                 # start reduce function
-    #                 if position.shape[0] >= 5:
-    #                     if np.any(np.all(searched == [x, y, j], axis=1)):
-    #                         # searched before, don't search any more
-    #                         break
-    #                     else:
-    #                         # never searched before, push result to searched
-    #                         # array
-    #                         searched = np.append(searched, [[x, y, j]], axis=0)
-    #                 # 超过边
-    #                 if x < 0 or y < 0 or (x > self.n - 1) or (y > self.n - 1):
-    #                     break
-    #                 # 空白的格子
-    #                 elif b[x, y] == 0:
-    #                     if i == 0:
-    #                         break
-    #                     elif differentColorAppeared == False:
-    #                         break
-    #                     else:
-    #                         result.append(nextSearchStep)
-    #                         break
-    #                 # 与当前要下的棋子不同色
-    #                 elif b[x, y] != c:
-    #                     # 如果找到和当前要下的棋子一样的，那么就把当中所有棋子都变成这种颜色
-    #                     differentColorAppeared = True
-    #                     continue
-    #                 elif b[x, y] == c:
-    #                     if differentColorAppeared == True:
-    #                         break
-    #                     else:
-    #                         continue
-    #     return np.array(result)
+    def searchPossibleStepsToEdge(self, positions, state=None,  color=None):
+        """
+            search in 8 directions
+            batch search algorithm
+            positions is python list
+            TODO: impact heavily on performance
+        """
+        if color:
+            c = color
+        else:
+            c = self.color
+        if type(state) == np.ndarray:
+            b = state
+        else:
+            b = self.board
+        n = self.n
+        searched = np.empty((0, 3), np.int8)
+        result = []
+        for position in positions:
+            p = np.array(position, np.int8)
+            for j in range(n):
+                differentColorAppeared = False
+                d = self.directions[j]
+                for i in range(n):
+                    nextSearchStep = p + (i + 1) * np.array(d, np.int8)
+                    x, y = nextSearchStep
+                    # if too many steps
+                    # start reduce function
+                    if position.shape[0] >= 5:
+                        if np.any(np.all(searched == [x, y, j], axis=1)):
+                            # searched before, don't search any more
+                            break
+                        else:
+                            # never searched before, push result to searched
+                            # array
+                            searched = np.append(searched, [[x, y, j]], axis=0)
+                    # 超过边
+                    if x < 0 or y < 0 or (x > self.n - 1) or (y > self.n - 1):
+                        break
+                    # 空白的格子
+                    elif b[x, y] == 0:
+                        if i == 0:
+                            break
+                        elif differentColorAppeared == False:
+                            break
+                        else:
+                            result.append(nextSearchStep)
+                            break
+                    # 与当前要下的棋子不同色
+                    elif b[x, y] != c:
+                        # 如果找到和当前要下的棋子一样的，那么就把当中所有棋子都变成这种颜色
+                        differentColorAppeared = True
+                        continue
+                    elif b[x, y] == c:
+                        if differentColorAppeared == True:
+                            break
+                        else:
+                            continue
+        return np.array(result)
 
     def play(self, position=None):
         """play at position"""
@@ -490,3 +485,286 @@ class Board:
                 else:
                     winner = self.judgeWinner(next_state)
                     return (winner, True)
+from pymongo import MongoClient
+from pymongo.errors import BulkWriteError
+import numpy as np
+from numba import jitclass
+
+UPDATED = True
+
+class DB:
+    """
+        DB interface for markov decision process
+        for CRUD functions of state and value
+    """
+
+    def __init__(self, db_name, top_exceed=1000000):
+        self.client = MongoClient()
+        self.db = self.client[db_name]
+        self.col_states = self.db.states
+        self.top_exceed = top_exceed
+        self.states = None
+        self.values = None
+        self.updated_tags = None
+
+    def load_data(self):
+        """ load data from db"""
+        datas = self.db.states.find({}).sort('_id', -1).limit(self.top_exceed)
+        states = []
+        values = []
+        updated = []
+        for data in datas:
+            if data['value'] != 0.0:
+                states.append(data['state'])
+                values.append(data['value'])
+                updated.append(False)
+        self.states = np.array([state for state in states])
+        self.values = np.array([value for value in values])
+        self.updated_tags = np.array([tag for tag in updated])
+        return None
+
+    def bulk_save(self):
+        """
+            bulk save data
+            TODO: bulk save is too heavy, add a updated tag to specify which to save
+        """
+        bulk = self.col_states.initialize_unordered_bulk_op()
+        indexes = np.argwhere(self.updated_tags == True)
+        if indexes.shape[0] == 0:
+            return
+        for index in indexes:
+            bulk.find({'state': self.states[index[0]].tolist()}).upsert().update({
+                '$set': {
+                    'value': self.values[index].tolist()[0]
+                }
+            })
+            self.updated_tags[index] = False
+        try:
+            bulk.execute()
+        except BulkWriteError as bwe:
+            print(bwe.details)
+
+    def push(self, state, value):
+        """push a data to in memory data"""
+        self.states = np.append(self.states, [state], axis=0)
+        self.values = np.append(self.values, [value], axis=0)
+        self.updated_tags = np.append(self.updated_tags, [UPDATED], axis=0)
+
+    def pop(self):
+        """
+            pop out a data incase memory explosion
+        """
+        state = np.delete(self.states, (0), axis=0)
+        value = np.delete(self.values, (0), axis=0)
+        updated = np.delete(self.updated_tags, (0), axis=0)
+        return state, value, updated
+
+    def find_state_in_memory(self, state):
+        """
+            find data in memory
+        """
+        index = np.argwhere(np.all(self.states == state, axis=(2, 1)))
+        if index.shape[0] == 0:
+            return None
+        else:
+            return index[0][0]
+
+    def find_state_in_db(self, state):
+        """
+            find state
+            type(state) is np.ndarray
+        """
+        result = self.col_states.find_one({'state': state.tolist()})
+        return result
+
+    def find_value(self, state, default_value):
+        """
+            find state, first search in memory then in database
+        """
+        index = self.find_state_in_memory(state)
+        value = None
+        in_memory = None
+        if isinstance(index, int):
+            # value in memory
+            value = self.values[index]
+            in_memory = True
+        else:
+            # value not in memory
+            result = self.find_state_in_db(state)
+            if result:
+                value = result['value']
+            else:
+                value = default_value
+            in_memory = False
+        return index, value, in_memory
+
+    def store_state_in_memory(self, state, value):
+        """
+            store state in memory
+        """
+        self.push(state, value)
+
+    def store_state_in_db(self, state, value):
+        """
+            store value
+        """
+        result = self.col_states.update_one({
+            'state': state.tolist()
+        }, {
+            '$set': {
+                'value': value
+            }
+        }, upsert=True)
+        return result
+
+    def store_state(self, state, value, default_value):
+        """
+            store state in memory first
+            if memory is full, pop out the first record, then store the poped record to database
+        """
+        in_memory_number = self.values.shape[0]
+        index,  previous_value,  in_memory = self.find_value(state, default_value)
+        if previous_value == value:
+            return
+        elif in_memory:
+            self.update_state_in_memory(index, value)
+        else:
+            self.store_state_in_memory(state, value)
+            if in_memory_number <= self.top_exceed:
+                # do nothing
+                return
+            else:
+                poped_state, poped_value, updated = self.pop()
+                if updated:
+                    self.store_state_in_db(poped_state, poped_value)
+
+    def update_state_in_memory(self, index, value):
+        self.values[index] = value
+        self.updated_tags[index] = True 
+
+    def find_values(self, states, default_value):
+        """get values"""
+        v = []
+        for state in states:
+            result = self.find_value(state, default_value)
+            if result and 'value' in result:
+                value = result['value']
+                v.append(value)
+            else:
+                v.append(default_value)
+        return np.array(v)
+
+from random import random
+from pymongo import MongoClient
+import numpy as np
+
+"""
+	Markov Decision Process
+	Conponents:
+		state - store values
+		action
+		state_action pair - store rewards and quality
+			reward
+			q function of (s,a)
+		# policies
+"""
+
+
+class Policy:
+    """
+        MDP - Policy
+    """
+
+    def __init__(self, gamma, tao, db, default_value):
+        self.gamma = gamma or 0.9
+        self.tao = tao or 0.1
+        self.db = db
+        self.default_value = default_value
+
+    def pai(self, actions, next_states, rewards, method='max'):
+        """given a state and actions, calculate the optimal action"""
+        # at some rate select random action
+        # return optimal policy otherwise
+        next_states_values = self.db.find_values(
+            next_states, default_value=self.default_value)
+        if random() < self.tao:
+            random_index = int(actions.shape[0] * random())
+            value = bellman_quality_equation(rewards[random_index], self.gamma,
+                                             next_states_values[random_index])
+            return (actions[random_index], value, 'explotary')
+        else:
+            # terminal_results = []
+            # next_state_is_terminal = False
+            # # for every next state which will be ended, update value and reward
+            # for index, state in enumerate(next_states):
+            #     ended, winner = tictac.judge_terminal(state)
+            #     if ended:
+            #         next_state_is_terminal = True
+            #         terminal_results.append({
+            #             'index': index,
+            #             'winner': winner
+            #         })
+            (action_index, optimal_quality) = bellman_value_equation(
+                rewards, self.gamma, next_states_values, method)
+            next_actions = actions[action_index]
+            # select a random optimal action
+            random_index = int(next_actions.shape[0] * random())
+            return (next_actions[random_index], optimal_quality, 'explantary')
+
+
+def bellman_quality_equation(reward, gamma, next_state_value):
+    """
+            Bellman quality equation, simplified version
+            Q(s,a) = R(s,a) + gamma * simga(T(s, a, s') * V(s'))
+    """
+    return reward + gamma * next_state_value
+
+
+def bellman_value_equation(rewards, gamma, next_states_values, method='max'):
+    """
+            compute Bellman value function for the given state and actions
+            V(s) = max of a(R(s,a) + gamma * sigma(T(s, a, s') * V(s')))
+    """
+    qualities = rewards + gamma * next_states_values
+    if method == 'max':
+        optimal_quality = np.max(qualities)
+        action_index = np.argwhere(qualities == np.max(qualities)).flatten()
+    elif method == 'min':
+        optimal_quality = np.min(qualities)
+        action_index = np.argwhere(qualities == np.min(qualities)).flatten()
+    return (action_index, optimal_quality)
+
+from numba import autojit
+
+omega = Board()
+db = DB(db_name='omega', top_exceed=1000000)
+db.load_data()
+policy = Policy(gamma=0.9, tao=0.1, db=db,
+                default_value=0)
+steps = 10
+def train():
+    for i in range(steps):
+        print(i)
+        if (i+1) % 100 == 0:
+            db.bulk_save()
+        while omega.ended:
+            actions = omega.possibleSteps
+            if omega.step < 48:
+                ended = False
+            else:
+                winner, ended = omega.judge_terminal()
+            # print '\n train huhihutu called'
+            # print ('actions:', actions)
+            # print('winner: ',winner,' ended: ',ended)
+            if actions.shape[0] == 0 and ended == False:
+                omega.play()
+                continue
+            else:
+                if omega.color == -1:
+                    (action, value, move) = omega.apply_policy(policy.pai, 'max')
+                else:
+                    (action, value, move) = omega.apply_policy(policy.pai, 'min')
+                if value != 0.0 and omega.step < 58:
+                    db.store_state(omega.board, value, default_value = 0)
+                omega.play(action)
+        omega.reset()
